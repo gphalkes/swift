@@ -106,18 +106,8 @@ int main (int argc, char** argv) {
     }   // arguments parsed
     
 
-    if (bindaddr!=Address()) { // seeding
-        if (Listen(bindaddr)<=0)
-            quit("cant listen to %s\n",bindaddr.str())
-    } else if (tracker!=Address() || http_gw!=Address()) { // leeching
-        for (int i=0; i<=10; i++) {
-            bindaddr = Address((uint32_t)INADDR_ANY,1024+rand()%10000);
-            if (Listen(bindaddr)>0)
-                break;
-            if (i==10)
-                quit("cant listen on %s\n",bindaddr.str());
-        }
-    }
+    if (Listen(bindaddr)<=0)
+        quit("cant listen to %s\n",bindaddr.str())
     
     if (tracker!=Address())
         SetTracker(tracker);
@@ -136,7 +126,7 @@ int main (int argc, char** argv) {
         printf("Root hash: %s\n", RootMerkleHash(file).hex().c_str());
     }
 
-    if (bindaddr==Address() && file==-1) {
+    if (file==-1) {
         fprintf(stderr,"Usage:\n");
         fprintf(stderr,"  -h, --hash\troot Merkle hash for the transmission\n");
         fprintf(stderr,"  -f, --file\tname of file to use (root hash by default)\n");
@@ -146,12 +136,12 @@ int main (int argc, char** argv) {
         fprintf(stderr,"  -p, --progress\treport transfer progress\n");
         fprintf(stderr,"  -g, --http\t[ip:|host:]port to bind HTTP gateway to (default localhost:8080)\n");
         fprintf(stderr,"  -w, --wait\tlimit running time, e.g. 1[DHMs] (default: infinite with -l, -g)\n");
+        exit(EXIT_SUCCESS);
     }
 
     tint start_time = NOW;
     
-    while ( bindaddr!=Address() &&
-            ( ( file>=0 && !IsComplete(file) ) ||
+    while (( ( file>=0 && !IsComplete(file) ) ||
               ( start_time+wait_time > NOW ) )   ) {
         swift::Loop(TINT_SEC);
         if (report_progress && file>=0) {
