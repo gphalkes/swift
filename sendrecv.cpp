@@ -503,11 +503,16 @@ void    Channel::RecvDatagram (SOCKET socket) {
         if (!file)
             return_log ("%s #0 hash %s unknown, no such file %s\n",tintstr(),hash.hex().c_str(),addr.str());
         dprintf("%s #0 -hash ALL %s\n",tintstr(),hash.hex().c_str());
-        for(binqueue::iterator i=file->hs_in_.begin(); i!=file->hs_in_.end(); i++)
-            if (channels[*i] && channels[*i]->peer_==data.address() &&
-                channels[*i]->last_recv_time_>NOW-TINT_SEC*2)
-                return_log("%s #0 have a channel already to %s\n",tintstr(),addr.str());
-        channel = new Channel(file, socket, data.address());
+        for(binqueue::iterator i=file->hs_in_.begin(); i!=file->hs_in_.end(); i++) {
+            if (channels[*i] && channels[*i]->peer_==data.address()) {
+                if (channels[*i]->peer_channel_id_ != 0)
+                    return_log("%s #0 have a channel already to %s\n",tintstr(),addr.str());
+                channel = channels[*i];
+                break;
+            }
+        }
+        if (channel == NULL)
+            channel = new Channel(file, socket, data.address());
     } else {
         mych = DecodeID(mych);
         if (mych>=channels.size())
