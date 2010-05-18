@@ -73,6 +73,8 @@ tint    Channel::KeepAliveNextSendTime () {
         return SwitchSendControl(SLOW_START_CONTROL);
     if (data_in_.time!=TINT_NEVER)
         return NOW;
+    if (pex_out_ + transfer_->hs_in_offset_ < transfer_->hs_in_.size())
+        return NOW;
     send_interval_ <<= 1;
     if (send_interval_>MAX_SEND_INTERVAL)
         send_interval_ = MAX_SEND_INTERVAL;

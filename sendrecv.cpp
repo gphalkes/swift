@@ -472,6 +472,7 @@ void    Channel::AddPex (Datagram& dgram) {
     dgram.Push8(SWIFT_PEX_ADD);
     dgram.Push32(a.ipv4());
     dgram.Push16(a.port());
+    channels[chid]->Reschedule();
     dprintf("%s #%u +pex %s\n",tintstr(),id_,a.str());
 }
 
