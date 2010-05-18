@@ -102,8 +102,8 @@ struct socket_callbacks_t {
 class Datagram {
 
     Address addr;
-    SOCKET sock;
     int offset, length;
+    SOCKET sock;
     uint8_t    buf[MAXDGRAMSZ*2];
 
 public:

@@ -153,7 +153,7 @@ void HttpGwNewRequestCallback (SOCKET http_conn){
     }
     // HTTP header fields
     char* headerline;
-    while (headerline=strtok(NULL,"\n\r")) {
+    while ((headerline=strtok(NULL,"\n\r"))) {
         char header[128], value[256];
         if (2!=sscanf(headerline,"%120[^: ]: %250[^\r\n]",header,value)) {
             HttpGwCloseConnection(http_conn);
@@ -234,4 +234,5 @@ SOCKET InstallHTTPGateway (Address bind_to) {
     socket_callbacks_t install_http(fd,HttpGwNewConnectionCallback,NULL,HttpGwError);
     gw_ensure (swift::Listen3rdPartySocket(install_http));
     dprintf("%s @0 installed http gateway on %s\n",tintstr(),bind_to.str());
+	return fd;
 }

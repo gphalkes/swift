@@ -24,7 +24,7 @@ class SeqPiecePicker : public PiecePicker {
 public:
     
     SeqPiecePicker (FileTransfer* file_to_pick_from) : 
-    transfer_(file_to_pick_from), ack_hint_out_(), twist_(0) {
+    ack_hint_out_(), transfer_(file_to_pick_from), twist_(0) {
         ack_hint_out_.copy_range(file().ack_out(),bin64_t::ALL);
     }
     virtual ~SeqPiecePicker() {}

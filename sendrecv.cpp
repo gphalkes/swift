@@ -513,7 +513,7 @@ void    Channel::RecvDatagram (SOCKET socket) {
             return_log("%s invalid channel #%u, %s\n",tintstr(),mych,addr.str());
         channel = channels[mych];
         if (!channel)
-            return_log ("%s #%u is already closed\n",tintstr(),mych,addr.str());
+            return_log ("%s #%u is already closed\n",tintstr(),mych);
         if (channel->peer() != addr)
             return_log ("%s #%u invalid peer address %s!=%s\n",
                         tintstr(),mych,channel->peer().str(),addr.str());

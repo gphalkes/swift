@@ -55,8 +55,8 @@ void binmap_t::extend () {
     cells = ncells;
 }
 
-binmap_t::binmap_t() :  height(4), blocks_allocated(0), cells(NULL), 
-                free_top(0), cells_allocated(0), twist_mask(0) {
+binmap_t::binmap_t() : cells(NULL), blocks_allocated(0), cells_allocated(0),
+				height(4), twist_mask(0), free_top(0) {
     alloc_cell();
     assert( free_top == 1 );
 }
@@ -72,8 +72,8 @@ void binmap_t::twist (uint64_t mask) {
     twist_mask = mask;
 }
 
-binmap_t::binmap_t (const binmap_t& b) : height(b.height), free_top(b.free_top),
-blocks_allocated(b.blocks_allocated), cells_allocated(b.cells_allocated) {
+binmap_t::binmap_t (const binmap_t& b) : blocks_allocated(b.blocks_allocated),
+cells_allocated(b.cells_allocated), height(b.height), free_top(b.free_top) {
     size_t memsz = blocks_allocated*16*32;
     cells = (uint32_t*) malloc(memsz);
     memcpy(cells,b.cells,memsz);
