@@ -465,13 +465,30 @@ void Channel::OnPex (Datagram& dgram) {
 
 
 void    Channel::AddPex (Datagram& dgram) {
-    int chid = transfer().RevealChannel(pex_out_);
-    if (chid==-1 || chid==id_)
+    // PEX messages sent to facilitate NAT/FW puncturing get priority
+    if (!reverse_pex_out_.is_empty()) {
+        do {
+            tintbin pex_peer = reverse_pex_out_.pop();
+            Address a = channels[(int) pex_peer.bin]->peer();
+            dgram.Push8(SWIFT_PEX_ADD);
+            dgram.Push32(a.ipv4());
+            dgram.Push16(a.port());
+            dprintf("%s #%u +pex (reverse) %s\n",tintstr(),id_,a.str());
+        } while (!reverse_pex_out_.is_empty() && dgram.space() >= 7);
+        return;
+    }
+
+    int chid;
+    while ((chid = transfer().RevealChannel(pex_out_)) != id_) {}
+    if (chid==-1)
         return;
     Address a = channels[chid]->peer();
     dgram.Push8(SWIFT_PEX_ADD);
     dgram.Push32(a.ipv4());
     dgram.Push16(a.port());
+    dprintf("%s #%u adding pex for channel %u at time %s\n", tintstr(), chid,
+        id_, tintstr(NOW + 2 * TINT_SEC));
+    channels[chid]->reverse_pex_out_.push(tintbin(NOW + 2 * TINT_SEC, (uint64_t) id_));
     channels[chid]->Reschedule();
     dprintf("%s #%u +pex %s\n",tintstr(),id_,a.str());
 }
@@ -562,7 +579,7 @@ void    Channel::Loop (tint howlong) {
                 send_queue.push(tintbin(send_time,sender->id()));
 
         }
-
+        dflush();
     } while (NOW<limit);
 
 }

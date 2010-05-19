@@ -73,8 +73,11 @@ tint    Channel::KeepAliveNextSendTime () {
         return SwitchSendControl(SLOW_START_CONTROL);
     if (data_in_.time!=TINT_NEVER)
         return NOW;
-    if (pex_out_ + transfer_->hs_in_offset_ < transfer_->hs_in_.size())
-        return NOW;
+    if (!reverse_pex_out_.is_empty()) {
+        dprintf("%s #%u next schedule due to reverse PEX at %s\n", tintstr(), id_,
+            tintstr(reverse_pex_out_.peek().time));
+        return reverse_pex_out_.peek().time;
+    }
     send_interval_ <<= 1;
     if (send_interval_>MAX_SEND_INTERVAL)
         send_interval_ = MAX_SEND_INTERVAL;

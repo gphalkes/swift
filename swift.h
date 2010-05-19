@@ -360,6 +360,7 @@ namespace swift {
         //tint        last_send_time, last_recv_time;
         /** PEX progress */
         int         pex_out_;
+        tbheap      reverse_pex_out_;
         /** Smoothed averages for RTT, RTT deviation and data interarrival periods. */
         tint        rtt_avg_, dev_avg_, dip_avg_;
         tint        last_send_time_;
@@ -472,9 +473,11 @@ namespace swift {
 } // namespace end
 
 #ifndef SWIFT_MUTE
-#define dprintf(...) { if (Channel::debug_file) fprintf(Channel::debug_file,__VA_ARGS__); }
+#define dprintf(...) do { if (Channel::debug_file) fprintf(Channel::debug_file,__VA_ARGS__); } while (0)
+#define dflush() fflush(Channel::debug_file)
 #else
-#define dprintf(...) {}
+#define dprintf(...) do {} while(0)
+#define dflush() do {} while(0)
 #endif
 #define eprintf(...) fprintf(stderr,__VA_ARGS__)
 
