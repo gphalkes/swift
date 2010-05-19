@@ -59,7 +59,7 @@ tint    Channel::SwitchSendControl (int control_mode) {
             break;
         case CLOSE_CONTROL:
             break;
-        default: 
+        default:
             assert(false);
     }
     send_control_ = control_mode;
@@ -73,10 +73,10 @@ tint    Channel::KeepAliveNextSendTime () {
         return SwitchSendControl(SLOW_START_CONTROL);
     if (data_in_.time!=TINT_NEVER)
         return NOW;
-    if (!reverse_pex_out_.is_empty()) {
+    if (!reverse_pex_out_.empty()) {
         dprintf("%s #%u next schedule due to reverse PEX at %s\n", tintstr(), id_,
-            tintstr(reverse_pex_out_.peek().time));
-        return reverse_pex_out_.peek().time;
+            tintstr(reverse_pex_out_.front().time));
+        return reverse_pex_out_.front().time;
     }
     send_interval_ <<= 1;
     if (send_interval_>MAX_SEND_INTERVAL)
@@ -130,8 +130,8 @@ tint    Channel::SlowStartNextSendTime () {
     if (ack_not_rcvd_recent_) {
         BackOffOnLosses();
         return SwitchSendControl(LEDBAT_CONTROL);//AIMD_CONTROL);
-    } 
-    if (rtt_avg_/cwnd_<TINT_SEC/10) 
+    }
+    if (rtt_avg_/cwnd_<TINT_SEC/10)
         return SwitchSendControl(LEDBAT_CONTROL);//AIMD_CONTROL);
     cwnd_+=ack_rcvd_recent_;
     ack_rcvd_recent_=0;

@@ -360,7 +360,7 @@ namespace swift {
         //tint        last_send_time, last_recv_time;
         /** PEX progress */
         int         pex_out_;
-        tbheap      reverse_pex_out_;
+        tbqueue     reverse_pex_out_;
         /** Smoothed averages for RTT, RTT deviation and data interarrival periods. */
         tint        rtt_avg_, dev_avg_, dip_avg_;
         tint        last_send_time_;

@@ -406,7 +406,7 @@ void    Channel::OnAck (Datagram& dgram) {
 void Channel::TimeoutDataOut ( ) {
     // losses: timeouted packets
     tint timeout = NOW - ack_timeout();
-    while (!data_out_.empty() && 
+    while (!data_out_.empty() &&
         ( data_out_.front().time<timeout || data_out_.front()==tintbin() ) ) {
         if (data_out_.front()!=tintbin() && ack_in_.is_empty(data_out_.front().bin)) {
             ack_not_rcvd_recent_++;
@@ -466,15 +466,18 @@ void Channel::OnPex (Datagram& dgram) {
 
 void    Channel::AddPex (Datagram& dgram) {
     // PEX messages sent to facilitate NAT/FW puncturing get priority
-    if (!reverse_pex_out_.is_empty()) {
+    if (!reverse_pex_out_.empty()) {
         do {
-            tintbin pex_peer = reverse_pex_out_.pop();
+            tintbin pex_peer = reverse_pex_out_.front();
+            reverse_pex_out_.pop_front();
+            if (channels[(int) pex_peer.bin] == NULL)
+                continue;
             Address a = channels[(int) pex_peer.bin]->peer();
             dgram.Push8(SWIFT_PEX_ADD);
             dgram.Push32(a.ipv4());
             dgram.Push16(a.port());
             dprintf("%s #%u +pex (reverse) %s\n",tintstr(),id_,a.str());
-        } while (!reverse_pex_out_.is_empty() && dgram.space() >= 7);
+        } while (!reverse_pex_out_.empty() && dgram.space() >= 7);
         return;
     }
 
@@ -488,8 +491,9 @@ void    Channel::AddPex (Datagram& dgram) {
     dgram.Push16(a.port());
     dprintf("%s #%u adding pex for channel %u at time %s\n", tintstr(), chid,
         id_, tintstr(NOW + 2 * TINT_SEC));
-    channels[chid]->reverse_pex_out_.push(tintbin(NOW + 2 * TINT_SEC, (uint64_t) id_));
-    channels[chid]->Reschedule();
+    channels[chid]->reverse_pex_out_.push_back(tintbin(NOW + 2 * TINT_SEC, (uint64_t) id_));
+    if (channels[chid]->next_send_time_ > NOW + 2 * TINT_SEC)
+        channels[chid]->Reschedule();
     dprintf("%s #%u +pex %s\n",tintstr(),id_,a.str());
 }
 
