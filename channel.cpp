@@ -38,18 +38,20 @@ tbheap Channel::send_queue;
 FILE* Channel::debug_file = NULL;
 #include "ext/simple_selector.cpp"
 PeerSelector* Channel::peer_selector = new SimpleSelector();
+tint Channel::MIN_PEX_REQUEST_INTERVAL = TINT_SEC;
 
 Channel::Channel    (FileTransfer* transfer, int socket, Address peer_addr) :
     peer_(peer_addr),
     socket_(socket==INVALID_SOCKET?sockets[0].sock:socket), // FIXME
     transfer_(transfer), peer_channel_id_(0), own_id_mentioned_(false),
     data_in_(TINT_NEVER,bin64_t::NONE), data_in_dbl_(bin64_t::NONE),
-    data_out_cap_(bin64_t::ALL), hint_out_size_(0), pex_out_(0),
+    data_out_cap_(bin64_t::ALL), hint_out_size_(0), pex_requested_(false),
+    last_pex_request_time_(0), useless_pex_count_(0),
     rtt_avg_(TINT_SEC), dev_avg_(0), dip_avg_(TINT_SEC), last_send_time_(0),
     last_recv_time_(0), last_data_out_time_(0), last_data_in_time_(0),
     last_loss_time_(0), next_send_time_(0), cwnd_(1), send_interval_(TINT_SEC),
     send_control_(PING_PONG_CONTROL), sent_since_recv_(0), ack_rcvd_recent_(0),
-    ack_not_rcvd_recent_(0), owd_min_bin_(0), owd_min_bin_start_(NOW), 
+    ack_not_rcvd_recent_(0), owd_min_bin_(0), owd_min_bin_start_(NOW),
     owd_cur_bin_(0), dgrams_sent_(0), dgrams_rcvd_(0)
 {
     if (peer_==Address())

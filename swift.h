@@ -113,7 +113,7 @@ namespace swift {
         SWIFT_HAVE = 3,
         SWIFT_HASH = 4,
         SWIFT_PEX_ADD = 5,
-        SWIFT_PEX_RM = 6,
+        SWIFT_PEX_REQ = 6,
         SWIFT_SIGNED_HASH = 7,
         SWIFT_HINT = 8,
         SWIFT_MSGTYPE_RCVD = 9,
@@ -146,7 +146,7 @@ namespace swift {
             we use a rotating queue of bin completion events. */
         //bin64_t         RevealAck (uint64_t& offset);
         /** Rotating queue read for channels of this transmission. */
-        int             RevealChannel (int& i);
+        int             RevealChannel (int own_id);
 
         /** Find transfer by the root hash. */
         static FileTransfer* Find (const Sha1Hash& hash);
@@ -179,11 +179,12 @@ namespace swift {
 
         /** Channels working for this transfer. */
         binqueue        hs_in_;
-        int             hs_in_offset_;
-        std::deque<Address> pex_in_;
 
         /** Messages we are accepting.    */
         uint64_t        cap_out_;
+
+        tint            next_pex_request_time_;
+        int             last_pex_request_channel_;
 
         tint            init_time_;
 
@@ -193,7 +194,7 @@ namespace swift {
 
     public:
         void            OnDataIn (bin64_t pos);
-        void            OnPexIn (const Address& addr);
+        bool            OnPexIn (const Address& addr);
 
         friend class Channel;
         friend uint64_t  Size (int fdes);
@@ -273,6 +274,7 @@ namespace swift {
         void        OnHint (Datagram& dgram);
         void        OnHash (Datagram& dgram);
         void        OnPex (Datagram& dgram);
+        void        OnPexReq(void);
         void        OnHandshake (Datagram& dgram);
         void        AddHandshake (Datagram& dgram);
         bin64_t     AddData (Datagram& dgram);
@@ -282,7 +284,7 @@ namespace swift {
         void        AddUncleHashes (Datagram& dgram, bin64_t pos);
         void        AddPeakHashes (Datagram& dgram);
         void        AddPex (Datagram& dgram);
-
+        void        AddPexReq(Datagram &dgram);
         void        BackOffOnLosses (float ratio=0.5);
         tint        SwitchSendControl (int control_mode);
         tint        NextSendTime ();
@@ -302,6 +304,7 @@ namespace swift {
         static tint LEDBAT_DELAY_BIN;
         static bool SELF_CONN_OK;
         static tint MAX_POSSIBLE_RTT;
+        static tint MIN_PEX_REQUEST_INTERVAL;
         static FILE* debug_file;
 
         const std::string id_string () const;
@@ -359,8 +362,10 @@ namespace swift {
         /** For repeats. */
         //tint        last_send_time, last_recv_time;
         /** PEX progress */
-        int         pex_out_;
+        bool        pex_requested_;
+        tint        last_pex_request_time_;
         tbqueue     reverse_pex_out_;
+        int         useless_pex_count_;
         /** Smoothed averages for RTT, RTT deviation and data interarrival periods. */
         tint        rtt_avg_, dev_avg_, dip_avg_;
         tint        last_send_time_;

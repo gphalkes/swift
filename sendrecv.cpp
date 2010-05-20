@@ -113,8 +113,10 @@ void    Channel::Send () {
         // FIXME: seeder check
         AddHave(dgram);
         AddAck(dgram);
-        if (!file().is_complete())
+        if (!file().is_complete()) {
             AddHint(dgram);
+            AddPexReq(dgram);
+        }
         AddPex(dgram);
         TimeoutDataOut();
         data = AddData(dgram);
@@ -276,6 +278,7 @@ void    Channel::Recv (Datagram& dgram) {
             case SWIFT_HASH:      OnHash(dgram); break;
             case SWIFT_HINT:      OnHint(dgram); break;
             case SWIFT_PEX_ADD:   OnPex(dgram); break;
+            case SWIFT_PEX_REQ:   OnPexReq(); break;
             default:
                 eprintf("%s #%u ?msg id unknown %i\n",tintstr(),id_,(int)type);
                 return;
@@ -460,7 +463,14 @@ void Channel::OnPex (Datagram& dgram) {
     uint16_t port = dgram.Pull16();
     Address addr(ipv4,port);
     dprintf("%s #%u -pex %s\n",tintstr(),id_,addr.str());
-    transfer().OnPexIn(addr);
+    bool result = transfer().OnPexIn(addr);
+    if (transfer().last_pex_request_channel_ == id_) {
+        transfer().last_pex_request_channel_ = -1;
+        if (result)
+            useless_pex_count_ = 0;
+        else
+            useless_pex_count_++;
+    }
 }
 
 
@@ -481,22 +491,60 @@ void    Channel::AddPex (Datagram& dgram) {
         return;
     }
 
-    int chid;
-    while ((chid = transfer().RevealChannel(pex_out_)) != id_) {}
+    if (!pex_requested_)
+        return;
+
+    int chid = transfer().RevealChannel(id_);
     if (chid==-1)
         return;
     Address a = channels[chid]->peer();
     dgram.Push8(SWIFT_PEX_ADD);
     dgram.Push32(a.ipv4());
     dgram.Push16(a.port());
+    dprintf("%s #%u +pex %s\n",tintstr(),id_,a.str());
+
+    pex_requested_ = false;
+    /* Ensure that we don't add the same id to the reverse_pex_out_ queue
+       more than once. */
+    for (tbqueue::iterator i = channels[chid]->reverse_pex_out_.begin();
+            i != channels[chid]->reverse_pex_out_.end(); i++)
+        if ((int) (i->bin) == id_)
+            return;
+
     dprintf("%s #%u adding pex for channel %u at time %s\n", tintstr(), chid,
         id_, tintstr(NOW + 2 * TINT_SEC));
     channels[chid]->reverse_pex_out_.push_back(tintbin(NOW + 2 * TINT_SEC, (uint64_t) id_));
     if (channels[chid]->next_send_time_ > NOW + 2 * TINT_SEC)
         channels[chid]->Reschedule();
-    dprintf("%s #%u +pex %s\n",tintstr(),id_,a.str());
 }
 
+void Channel::OnPexReq(void) {
+    dprintf("%s #%u -pex req\n", tintstr(), id_);
+    if (NOW > MIN_PEX_REQUEST_INTERVAL + last_pex_request_time_)
+        pex_requested_ = true;
+}
+
+void Channel::AddPexReq(Datagram &dgram) {
+    // Rate limit the number of PEX requests
+    if (NOW < transfer().next_pex_request_time_)
+        return;
+
+    // If no answer has been received from a previous request, count it as useless
+    if (transfer().last_pex_request_channel_ != -1 &&
+            channel(transfer().last_pex_request_channel_) != NULL)
+        channel(transfer().last_pex_request_channel_)->useless_pex_count_++;
+
+    // Initiate at most 20 connections
+    if (transfer().hs_in_.size() >= 20 ||
+            // Check whether this channel has been providing useful peer information
+            useless_pex_count_ > 2)
+        return;
+
+    dprintf("%s #%u +pex req\n", tintstr(), id_);
+    dgram.Push8(SWIFT_PEX_REQ);
+    transfer().next_pex_request_time_ = NOW + MIN_PEX_REQUEST_INTERVAL;
+    transfer().last_pex_request_channel_ = id_;
+}
 
 void    Channel::RecvDatagram (SOCKET socket) {
     Datagram data(socket);
