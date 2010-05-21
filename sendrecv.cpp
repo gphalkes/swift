@@ -494,9 +494,11 @@ void    Channel::AddPex (Datagram& dgram) {
     if (!pex_requested_)
         return;
 
-    int chid = transfer().RevealChannel(id_);
-    if (chid==-1)
+    int chid = transfer().RandomChannel(id_);
+    if (chid==-1) {
+        pex_requested_ = false;
         return;
+    }
     Address a = channels[chid]->peer();
     dgram.Push8(SWIFT_PEX_ADD);
     dgram.Push32(a.ipv4());
@@ -533,6 +535,8 @@ void Channel::AddPexReq(Datagram &dgram) {
     if (transfer().last_pex_request_channel_ != -1 &&
             channel(transfer().last_pex_request_channel_) != NULL)
         channel(transfer().last_pex_request_channel_)->useless_pex_count_++;
+
+    transfer().last_pex_request_channel_ = -1;
 
     // Initiate at most 20 connections
     if (transfer().hs_in_.size() >= 20 ||

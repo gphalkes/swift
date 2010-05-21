@@ -146,7 +146,7 @@ namespace swift {
             we use a rotating queue of bin completion events. */
         //bin64_t         RevealAck (uint64_t& offset);
         /** Rotating queue read for channels of this transmission. */
-        int             RevealChannel (int own_id);
+        int             RandomChannel (int own_id);
 
         /** Find transfer by the root hash. */
         static FileTransfer* Find (const Sha1Hash& hash);

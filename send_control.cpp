@@ -67,17 +67,14 @@ tint    Channel::SwitchSendControl (int control_mode) {
 }
 
 tint    Channel::KeepAliveNextSendTime () {
-    if (sent_since_recv_>=3 && last_recv_time_<NOW-TINT_MIN)
+    if (sent_since_recv_>=3 && last_recv_time_<NOW-3*MAX_SEND_INTERVAL)
         return SwitchSendControl(CLOSE_CONTROL);
     if (ack_rcvd_recent_)
         return SwitchSendControl(SLOW_START_CONTROL);
     if (data_in_.time!=TINT_NEVER)
         return NOW;
-    if (!reverse_pex_out_.empty()) {
-        dprintf("%s #%u next schedule due to reverse PEX at %s\n", tintstr(), id_,
-            tintstr(reverse_pex_out_.front().time));
+    if (!reverse_pex_out_.empty())
         return reverse_pex_out_.front().time;
-    }
     send_interval_ <<= 1;
     if (send_interval_>MAX_SEND_INTERVAL)
         send_interval_ = MAX_SEND_INTERVAL;

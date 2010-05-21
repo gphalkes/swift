@@ -97,7 +97,7 @@ bool FileTransfer::OnPexIn (const Address& addr) {
 }
 
 
-int FileTransfer::RevealChannel (int own_id) {
+int FileTransfer::RandomChannel (int own_id) {
     binqueue choose_from;
     int i;
 
