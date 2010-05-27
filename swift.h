@@ -183,9 +183,6 @@ namespace swift {
         /** Messages we are accepting.    */
         uint64_t        cap_out_;
 
-        tint            next_pex_request_time_;
-        int             last_pex_request_channel_;
-
         tint            init_time_;
 
         #define SWFT_MAX_TRANSFER_CB 8
@@ -364,6 +361,8 @@ namespace swift {
         /** PEX progress */
         bool        pex_requested_;
         tint        last_pex_request_time_;
+        tint        next_pex_request_time_;
+        bool        pex_request_outstanding_;
         tbqueue     reverse_pex_out_;
         int         useless_pex_count_;
         /** Smoothed averages for RTT, RTT deviation and data interarrival periods. */

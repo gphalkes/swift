@@ -463,14 +463,11 @@ void Channel::OnPex (Datagram& dgram) {
     uint16_t port = dgram.Pull16();
     Address addr(ipv4,port);
     dprintf("%s #%u -pex %s\n",tintstr(),id_,addr.str());
-    bool result = transfer().OnPexIn(addr);
-    if (transfer().last_pex_request_channel_ == id_) {
-        transfer().last_pex_request_channel_ = -1;
-        if (result)
-            useless_pex_count_ = 0;
-        else
-            useless_pex_count_++;
-    }
+    if (transfer().OnPexIn(addr))
+        useless_pex_count_ = 0;
+    else
+        useless_pex_count_++;
+    pex_request_outstanding_ = false;
 }
 
 
@@ -528,15 +525,14 @@ void Channel::OnPexReq(void) {
 
 void Channel::AddPexReq(Datagram &dgram) {
     // Rate limit the number of PEX requests
-    if (NOW < transfer().next_pex_request_time_)
+    if (NOW < next_pex_request_time_)
         return;
 
     // If no answer has been received from a previous request, count it as useless
-    if (transfer().last_pex_request_channel_ != -1 &&
-            channel(transfer().last_pex_request_channel_) != NULL)
-        channel(transfer().last_pex_request_channel_)->useless_pex_count_++;
+    if (pex_request_outstanding_)
+        useless_pex_count_++;
 
-    transfer().last_pex_request_channel_ = -1;
+    pex_request_outstanding_ = false;
 
     // Initiate at most 20 connections
     if (transfer().hs_in_.size() >= 20 ||
@@ -546,8 +542,10 @@ void Channel::AddPexReq(Datagram &dgram) {
 
     dprintf("%s #%u +pex req\n", tintstr(), id_);
     dgram.Push8(SWIFT_PEX_REQ);
-    transfer().next_pex_request_time_ = NOW + MIN_PEX_REQUEST_INTERVAL;
-    transfer().last_pex_request_channel_ = id_;
+    /* Add a little more than the minimum interval, such that the other party is
+       less likely to drop it due to too high rate */
+    next_pex_request_time_ = NOW + MIN_PEX_REQUEST_INTERVAL * 1.1;
+    pex_request_outstanding_ = true;
 }
 
 void    Channel::RecvDatagram (SOCKET socket) {
