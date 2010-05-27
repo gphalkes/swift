@@ -513,7 +513,8 @@ void    Channel::AddPex (Datagram& dgram) {
     dprintf("%s #%u adding pex for channel %u at time %s\n", tintstr(), chid,
         id_, tintstr(NOW + 2 * TINT_SEC));
     channels[chid]->reverse_pex_out_.push_back(tintbin(NOW + 2 * TINT_SEC, (uint64_t) id_));
-    if (channels[chid]->next_send_time_ > NOW + 2 * TINT_SEC)
+    if (channels[chid]->send_control_ == KEEP_ALIVE_CONTROL &&
+            channels[chid]->next_send_time_ > NOW + 2 * TINT_SEC)
         channels[chid]->Reschedule();
 }
 
