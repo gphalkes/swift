@@ -75,6 +75,8 @@ tint    Channel::KeepAliveNextSendTime () {
         return NOW;
     if (!reverse_pex_out_.empty())
         return reverse_pex_out_.front().time;
+    if (NOW < next_send_time_)
+        return next_send_time_;
     send_interval_ <<= 1;
     if (send_interval_>MAX_SEND_INTERVAL)
         send_interval_ = MAX_SEND_INTERVAL;
