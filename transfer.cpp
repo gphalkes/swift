@@ -86,8 +86,9 @@ int swift:: Find (Sha1Hash hash) {
 bool FileTransfer::OnPexIn (const Address& addr) {
     for(int i=0; i<hs_in_.size(); i++) {
         Channel* c = Channel::channel(hs_in_[i]);
-        if (c && c->transfer().fd()==this->fd() && c->peer()==addr) {
-            return false; // already connected
+        if (c && c->transfer().fd()==this->fd() && (c->peer()==addr ||
+                (!c->is_established() && c->peer().is_same_ip(addr)))) {
+            return false; // already connected or connecting to this IP address
         }
     }
     if (hs_in_.size()<20)

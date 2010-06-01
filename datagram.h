@@ -81,6 +81,7 @@ struct Address {
         return rs[i];
     }
     bool operator != (const Address& b) const { return !(*this==b); }
+    bool is_same_ip(const Address &b) const { return addr.sin_addr.s_addr == b.addr.sin_addr.s_addr; }
 };
 
 
@@ -95,7 +96,7 @@ struct socket_callbacks_t {
 };
 
 
-/** UDP datagram class, a nice wrapping around sendto/recvfrom/select. 
+/** UDP datagram class, a nice wrapping around sendto/recvfrom/select.
     Reading/writing from/to a datagram is done in a FIFO (deque) fashion:
     written data is appended to the tail (push) while read data is
     taken from the "head" of the buffer. */
