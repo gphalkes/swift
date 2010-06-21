@@ -535,8 +535,8 @@ void Channel::AddPexReq(Datagram &dgram) {
 
     pex_request_outstanding_ = false;
 
-    // Initiate at most 20 connections
-    if (transfer().hs_in_.size() >= 20 ||
+    // Initiate at most SWIFT_MAX_CONNECTIONS connections
+    if (transfer().hs_in_.size() >= SWIFT_MAX_CONNECTIONS ||
             // Check whether this channel has been providing useful peer information
             useless_pex_count_ > 2)
         return;

@@ -91,7 +91,7 @@ bool FileTransfer::OnPexIn (const Address& addr) {
             return false; // already connected or connecting to this IP address
         }
     }
-    if (hs_in_.size()<20)
+    if (hs_in_.size()<SWIFT_MAX_CONNECTIONS)
         new Channel(this,Channel::default_socket(),addr);
     return true;
 }

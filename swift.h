@@ -473,6 +473,7 @@ namespace swift {
     /** Must be called by any client using the library */
     void LibraryInit(void);
 
+    #define SWIFT_MAX_CONNECTIONS 20
 
 } // namespace end
 
