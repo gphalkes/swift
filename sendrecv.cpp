@@ -455,6 +455,8 @@ void Channel::OnHandshake (Datagram& dgram) {
         }
     }
     // FUTURE: channel forking
+    if (is_established())
+        dprintf("%s #0 established %s\n", tintstr(), peer().str());
 }
 
 
