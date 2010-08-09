@@ -18,7 +18,7 @@ SOCKET InstallHTTPGateway (Address addr);
 
 
 int main (int argc, char** argv) {
-    
+
     static struct option long_options[] =
     {
         {"hash",    required_argument, 0, 'h'},
@@ -40,12 +40,12 @@ int main (int argc, char** argv) {
     Address tracker;
     Address http_gw;
     tint wait_time = 0;
-    
+
     LibraryInit();
-    
+
     int c;
     while ( -1 != (c = getopt_long (argc, argv, ":h:f:dl:t:Dpg::w::", long_options, 0)) ) {
-        
+
         switch (c) {
             case 'h':
                 if (strlen(optarg)!=40)
@@ -103,11 +103,11 @@ int main (int argc, char** argv) {
         }
 
     }   // arguments parsed
-    
+
 
     if (Listen(bindaddr)<=0)
         quit("cant listen to %s\n",bindaddr.str())
-    
+
     if (tracker!=Address())
         SetTracker(tracker);
 
@@ -139,7 +139,7 @@ int main (int argc, char** argv) {
     }
 
     tint start_time = NOW;
-    
+
     while ( (file>=0 && !IsComplete(file)) ||
             (start_time+wait_time>NOW)   ) {
         swift::Loop(TINT_SEC);
@@ -152,17 +152,18 @@ int main (int argc, char** argv) {
                 Datagram::dgrams_up, Datagram::bytes_up,
                 Datagram::dgrams_down, Datagram::bytes_down );
         }
+        nat_test_update();
     }
-    
+
     if (file!=-1)
         Close(file);
-    
+
     if (Channel::debug_file)
         fclose(Channel::debug_file);
-    
+
     swift::Shutdown();
-    
+
     return 0;
-    
+
 }
 

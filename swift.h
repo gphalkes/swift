@@ -474,6 +474,7 @@ namespace swift {
 
     #define SWIFT_MAX_CONNECTIONS 20
 
+    void nat_test_update(void);
 } // namespace end
 
 #ifndef SWIFT_MUTE
