@@ -90,11 +90,12 @@ Address::Address(const char* ip_port) {
 bool    Datagram::Listen3rdPartySocket (sckrwecb_t cb) {
     int i=0;
     while (i<sock_count && sock_open[i].sock!=cb.sock) i++;
-    if (i==sock_count)
+    if (i==sock_count) {
         if (i==DGRAM_MAX_SOCK_OPEN)
             return false;
         else
             sock_count++;
+	}
     sock_open[i]=cb;
     //if (!cb.may_read && !cb.may_write && !cb.on_error)
     //    sock_open[i] = sock_open[--sock_count];
@@ -194,7 +195,6 @@ SOCKET Datagram::Bind (Address address, sckrwecb_t callbacks) {
                              (setsockoptptr_t)&sndbuf, sizeof(int)) == 0 );
     dbnd_ensure ( setsockopt(fd, SOL_SOCKET, SO_RCVBUF, 
                              (setsockoptptr_t)&rcvbuf, sizeof(int)) == 0 );
-    //setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (setsockoptptr_t)&enable, sizeof(int));
     dbnd_ensure ( ::bind(fd, (sockaddr*)&addr, len) == 0 );
     callbacks.sock = fd;
     Datagram::sock_open[Datagram::sock_count++] = callbacks;

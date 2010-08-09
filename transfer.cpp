@@ -11,7 +11,7 @@
 #include <sstream>
 #include "swift.h"
 
-#include "ext/seq_picker.cpp" // FIXME FIXME FIXME FIXME 
+#include "ext/seq_picker.cpp" // FIXME FIXME FIXME FIXME
 
 using namespace swift;
 
@@ -22,7 +22,7 @@ std::vector<FileTransfer*> FileTransfer::files(20);
 // FIXME: separate Bootstrap() and Download(), then Size(), Progress(), SeqProgress()
 
 FileTransfer::FileTransfer (const char* filename, const Sha1Hash& _root_hash) :
-    file_(filename,_root_hash), hs_in_offset_(0), cb_installed(0)
+    file_(filename,_root_hash), cb_installed(0)
 {
     if (files.size()<fd()+1)
         files.resize(fd()+1);
@@ -34,8 +34,8 @@ FileTransfer::FileTransfer (const char* filename, const Sha1Hash& _root_hash) :
 
 
 void    Channel::CloseTransfer (FileTransfer* trans) {
-    for(int i=0; i<Channel::channels.size(); i++) 
-        if (Channel::channels[i] && Channel::channels[i]->transfer_==trans) 
+    for(int i=0; i<Channel::channels.size(); i++)
+        if (Channel::channels[i] && Channel::channels[i]->transfer_==trans)
             delete Channel::channels[i];
 }
 
@@ -83,7 +83,7 @@ FileTransfer* FileTransfer::Find (const Sha1Hash& root_hash) {
 }
 
 
-int       swift:: Find (Sha1Hash hash) {
+int swift:: Find (Sha1Hash hash) {
     FileTransfer* t = FileTransfer::Find(hash);
     if (t)
         return t->fd();
@@ -92,41 +92,42 @@ int       swift:: Find (Sha1Hash hash) {
 
 
 
-void            FileTransfer::OnPexIn (const Address& addr) {
+bool FileTransfer::OnPexIn (const Address& addr) {
     for(int i=0; i<hs_in_.size(); i++) {
         Channel* c = Channel::channel(hs_in_[i]);
-        if (c && c->transfer().fd()==this->fd() && c->peer()==addr)
-            return; // already connected
+        if (c && c->transfer().fd()==this->fd() && (c->peer()==addr ||
+                (!c->is_established() && c->peer().is_same_ip(addr)))) {
+            return false; // already connected or connecting to this IP address
+        }
     }
-    if (hs_in_.size()<20) {
+    if (hs_in_.size()<SWIFT_MAX_CONNECTIONS)
         new Channel(this,Datagram::default_socket(),addr);
-    } else {
-        pex_in_.push_back(addr);
-        if (pex_in_.size()>1000)
-            pex_in_.pop_front();
-    }
+    return true;
 }
 
 
-int        FileTransfer::RevealChannel (int& pex_out_) { // FIXME brainfuck
-    pex_out_ -= hs_in_offset_;
-    if (pex_out_<0)
-        pex_out_ = 0;
-    while (pex_out_<hs_in_.size()) {
-        Channel* c = Channel::channel(hs_in_[pex_out_]);
-        if (c && c->transfer().fd()==this->fd()) {
-            if (c->is_established()) {
-                pex_out_ += hs_in_offset_ + 1;
-                return c->id();
-            } else
-                pex_out_++;
-        } else {
-            hs_in_[pex_out_] = hs_in_[0];
+int FileTransfer::RandomChannel (int own_id) {
+    binqueue choose_from;
+    int i;
+
+    for (i = 0; i < (int) hs_in_.size(); i++) {
+        if (hs_in_[i] == own_id)
+            continue;
+        Channel *c = Channel::channel(hs_in_[i]);
+        if (c == NULL || c->transfer().fd() != this->fd()) {
+            /* Channel was closed or is not associated with this FileTransfer (anymore). */
+            hs_in_[i] = hs_in_[0];
             hs_in_.pop_front();
-            hs_in_offset_++;
+            i--;
+            continue;
         }
+        if (!c->is_established())
+            continue;
+        choose_from.push_back(hs_in_[i]);
     }
-    pex_out_ += hs_in_offset_;
-    return -1;
+    if (choose_from.size() == 0)
+        return -1;
+
+    return choose_from[((double) rand() / RAND_MAX) * choose_from.size()];
 }
 

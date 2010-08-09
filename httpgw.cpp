@@ -155,7 +155,7 @@ void HttpGwNewRequestCallback (SOCKET http_conn){
     }
     // HTTP header fields
     char* headerline;
-    while (headerline=strtok(NULL,"\n\r")) {
+    while ((headerline=strtok(NULL,"\n\r"))) {
         char header[128], value[256];
         if (2!=sscanf(headerline,"%120[^: ]: %250[^\r\n]",header,value)) {
             HttpGwCloseConnection(http_conn);
@@ -221,7 +221,7 @@ SOCKET InstallHTTPGateway (Address bind_to) {
     #define gw_ensure(x) { if (!(x)) { \
     print_error("http binding fails"); close_socket(fd); \
     return INVALID_SOCKET; } }
-    gw_ensure ( (fd=socket(AF_INET, SOCK_STREAM, 0)) != INVALID_SOCKET );
+    gw_ensure ( (fd=socket(PF_INET, SOCK_STREAM, 0)) != INVALID_SOCKET );
     int enable = true;
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (setsockoptptr_t)&enable, sizeof(int));
     //setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (setsockoptptr_t)&enable, sizeof(int));
