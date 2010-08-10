@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <assert.h>
 #ifdef _WIN32
-#include <Tchar.h>
+#include <tchar.h>
 #include <io.h>
 #include <sys/timeb.h>
 #include <vector>

@@ -67,9 +67,10 @@ typedef int SOCKET;
 #endif
 
 #ifdef _WIN32
-#define setsockoptptr_t (char*)
+typedef char* setsockoptptr_t;
+typedef int socklen_t;
 #else
-#define setsockoptptr_t void*
+typedef void* setsockoptptr_t;
 #endif
 
 

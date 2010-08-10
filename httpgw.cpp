@@ -229,7 +229,9 @@ SOCKET InstallHTTPGateway (Address bind_to) {
     //memset(&act,0,sizeof(struct sigaction));
     //act.sa_handler = SIG_IGN;
     //sigaction (SIGPIPE, &act, NULL); // FIXME
+#ifndef _WIN32
     signal( SIGPIPE, SIG_IGN );
+#endif
     gw_ensure ( 0==bind(fd, (sockaddr*)&(bind_to.addr), sizeof(struct sockaddr_in)) );
     gw_ensure (make_socket_nonblocking(fd));
     gw_ensure ( 0==listen(fd,8) );
