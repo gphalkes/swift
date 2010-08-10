@@ -22,11 +22,12 @@ static int tries;
 static int packets_since_last_try;
 
 static sckrwecb_t callbacks(0, on_may_receive, on_may_send, NULL);
-
-#warning Change addresses to actual addresses used in test
-static Address servers[2] = { Address("dutigp.st.ewi.tudelft.nl:18375"),
-    Address("127.0.0.3:18375") };
-
+/* Note that we lookup the addresses when we actually send, because Windows requires that
+   the winsock library is first intialized. If we use Address type variables here, the
+   lookup would be tried before that initialization, which fails... */
+//FIXME: Change addresses to actual addresses used in test (at least 2 should be provided!)
+static const char *servers[] = { "dutiep.st.ewi.tudelft.nl:18375" ,
+    "127.0.0.3:18375" };
 
 static void on_may_receive(SOCKET sock) {
     Datagram data(sock);
@@ -57,7 +58,7 @@ static void on_may_send(SOCKET sock) {
     Datagram::Listen3rdPartySocket(callbacks);
 
     for (size_t i = 0; i < (sizeof(servers)/sizeof(servers[0])); i++) {
-        Datagram request(sock, servers[i]);
+        Datagram request(sock, Address(servers[i]));
 
         request.Push32(REQUEST_MAGIC);
         request.Send();
