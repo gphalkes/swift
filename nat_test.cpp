@@ -12,7 +12,7 @@
 #define REQUEST_MAGIC 0x5a9e5fa1
 #define REPLY_MAGIC 0xa655c5d5
 #define REPLY_SEC_MAGIC 0x85e4a5ca
-#define MAX_TRIES (3 * (sizeof(servers) / sizeof(servers[0])))
+#define MAX_TRIES 3
 namespace swift {
 
 static void on_may_receive(SOCKET sock);
@@ -23,6 +23,7 @@ static int packets_since_last_try;
 
 static sckrwecb_t callbacks(0, on_may_receive, on_may_send, NULL);
 
+#warning Change addresses to actual addresses used in test
 static Address servers[2] = { Address("dutigp.st.ewi.tudelft.nl:18375"),
     Address("127.0.0.3:18375") };
 
@@ -52,12 +53,15 @@ static void on_may_receive(SOCKET sock) {
 }
 
 static void on_may_send(SOCKET sock) {
-    Datagram request(sock, servers[(tries - 1) % (sizeof(servers)/sizeof(servers[0]))]);
     callbacks.may_write = NULL;
     Datagram::Listen3rdPartySocket(callbacks);
 
-    request.Push32(REQUEST_MAGIC);
-    request.Send();
+    for (size_t i = 0; i < (sizeof(servers)/sizeof(servers[0])); i++) {
+        Datagram request(sock, servers[i]);
+
+        request.Push32(REQUEST_MAGIC);
+        request.Send();
+    }
     test_start = NOW;
 
     struct sockaddr_in name;

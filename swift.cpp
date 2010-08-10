@@ -30,6 +30,7 @@ int main (int argc, char** argv) {
         {"progress",no_argument, 0, 'p'},
         {"http",    optional_argument, 0, 'g'},
         {"wait",    optional_argument, 0, 'w'},
+        {"nat-test",no_argument, 0, 'N'},
         {0, 0, 0, 0}
     };
 
@@ -40,11 +41,12 @@ int main (int argc, char** argv) {
     Address tracker;
     Address http_gw;
     tint wait_time = 0;
+    bool do_nat_test = false;
 
     LibraryInit();
 
     int c;
-    while ( -1 != (c = getopt_long (argc, argv, ":h:f:dl:t:Dpg::w::", long_options, 0)) ) {
+    while ( -1 != (c = getopt_long (argc, argv, ":h:f:dl:t:Dpg::w::N", long_options, 0)) ) {
 
         switch (c) {
             case 'h':
@@ -100,6 +102,9 @@ int main (int argc, char** argv) {
                 } else
                     wait_time = TINT_NEVER;
                 break;
+            case 'N':
+                do_nat_test = true;
+                break;
         }
 
     }   // arguments parsed
@@ -152,7 +157,8 @@ int main (int argc, char** argv) {
                 Datagram::dgrams_up, Datagram::bytes_up,
                 Datagram::dgrams_down, Datagram::bytes_down );
         }
-        nat_test_update();
+        if (do_nat_test)
+            nat_test_update();
     }
 
     if (file!=-1)
