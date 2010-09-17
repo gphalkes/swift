@@ -148,7 +148,7 @@ void HttpGwNewRequestCallback (SOCKET http_conn){
     buf[rd] = 0;
     // HTTP request line
     char* reqline = strtok(buf,"\r\n");
-    char method[16], url[512], version[16], crlf[5];
+    char method[16], url[512], version[16];
     if (3!=sscanf(reqline,"%16s %512s %16s",method,url,version)) {
         HttpGwCloseConnection(http_conn);
         return;

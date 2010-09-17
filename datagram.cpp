@@ -59,7 +59,7 @@ void Address::set_ipv4 (const char* ip_str) {
         print_error("cannot lookup address");
         return;
     } else {
-        addr.sin_addr.s_addr = *(u_long *) h->h_addr_list[0];
+        addr.sin_addr.s_addr = *(uint32_t *) h->h_addr_list[0];
     }
 }
 
@@ -104,8 +104,8 @@ bool    Datagram::Listen3rdPartySocket (sckrwecb_t cb) {
 
     
 void Datagram::Shutdown () {
-    while (sock_count--)
-        Close(sock_open[sock_count].sock);
+    while (sock_count)
+        Close(sock_open[sock_count - 1].sock);
 }
     
 
@@ -190,7 +190,6 @@ SOCKET Datagram::Bind (Address address, sckrwecb_t callbacks) {
         print_error("binding fails"); close_socket(fd); return INVALID_SOCKET; } }
     dbnd_ensure ( (fd = socket(AF_INET, SOCK_DGRAM, 0)) >= 0 );
     dbnd_ensure( make_socket_nonblocking(fd) );  // FIXME may remove this
-    int enable = true;
     dbnd_ensure ( setsockopt(fd, SOL_SOCKET, SO_SNDBUF, 
                              (setsockoptptr_t)&sndbuf, sizeof(int)) == 0 );
     dbnd_ensure ( setsockopt(fd, SOL_SOCKET, SO_RCVBUF, 

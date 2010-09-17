@@ -71,7 +71,8 @@ static void warnx(int print_error, const char *fmt, ...)
 		fprintf(stderr, "\n");
 	}
 }
-
+#else
+#include <err.h>
 #endif /*_WIN32*/
 
 /* not part of the original file */

@@ -198,7 +198,6 @@ bool    make_socket_nonblocking(SOCKET fd) {
     u_long enable = 1;
     return 0==ioctlsocket(fd, FIONBIO, &enable);
 #else
-    int enable=1;
     return 0==fcntl(fd, F_SETFL, O_NONBLOCK);
 #endif
 }

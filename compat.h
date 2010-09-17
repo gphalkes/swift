@@ -78,12 +78,12 @@ namespace swift {
 
 /** tint is the time integer type; microsecond-precise. */
 typedef int64_t tint;
-#define TINT_HOUR ((tint)1000000*60*60)
-#define TINT_MIN ((tint)1000000*60)
-#define TINT_SEC ((tint)1000000)
-#define TINT_MSEC ((tint)1000)
-#define TINT_uSEC ((tint)1)
-#define TINT_NEVER ((tint)0x3fffffffffffffffLL)
+#define TINT_HOUR ((swift::tint)1000000*60*60)
+#define TINT_MIN ((swift::tint)1000000*60)
+#define TINT_SEC ((swift::tint)1000000)
+#define TINT_MSEC ((swift::tint)1000)
+#define TINT_uSEC ((swift::tint)1)
+#define TINT_NEVER ((swift::tint)0x3fffffffffffffffLL)
 
 
 size_t  file_size (int fd);
